@@ -54,14 +54,6 @@ class MaskRCNNTrainer(Tranier):
         train_dataset = torch.utils.data.Subset(train_dataset, indices[:-50])
         valid_dataset = torch.utils.data.Subset(valid_dataset, indices[-50:])
 
-        # def collate_fn(batch):
-        #     images, targets = list(zip(*batch))
-        #     # images = torch.stack(images)
-        #     images = list(images)
-        #     # print(images.shape)
-        #     # targets = torch.stack(targets)
-        #     targets = list(targets)
-        #     return images, targets
         def collate_fn(batch):
             return tuple(zip(*batch))
 
@@ -69,14 +61,14 @@ class MaskRCNNTrainer(Tranier):
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            num_workers=4,
+            # num_workers=4,
             collate_fn=collate_fn,
         )
         valid_loader = torch.utils.data.DataLoader(
             valid_dataset,
             batch_size=batch_size,
             shuffle=False,
-            num_workers=4,
+            # num_workers=4,
             collate_fn=collate_fn,
         )
 
@@ -171,13 +163,13 @@ class MaskRCNNTrainer(Tranier):
         # print('labels:', targets[0]['labels'].shape)
         # print('masks:', targets[0]['masks'].shape)
 
+        losses = self.model(images, targets)
         if not valid:
-            losses = self.model(images, targets)
             total_loss = sum(losses.values())
             return total_loss
         else:
-            output = self.model(images)
-            return output
+            # output = self.model(images)
+            return torch.zeros(1)
 
     def plot_results(self, epoch: int):
         if epoch % 100 == 0 or (epoch % 10 == 0 and epoch <= 100):
