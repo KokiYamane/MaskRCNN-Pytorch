@@ -1,6 +1,8 @@
 FROM nvidia/cuda:11.2.0-devel-ubuntu20.04
 # FROM --platform=linux/amd64 ubuntu:20.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Force color prompt in terminal.
 RUN sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/' /root/.bashrc
 
@@ -36,5 +38,11 @@ WORKDIR /root/requirements
 ADD requirements.txt /root/requirements
 RUN pip3 install -r requirements.txt
 RUN pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+
+# fix opencv error
+RUN apt-get update && \
+    apt-get install -y \
+    libgl1-mesa-dev \
+    libglib2.0-0
 
 WORKDIR /root/workspace

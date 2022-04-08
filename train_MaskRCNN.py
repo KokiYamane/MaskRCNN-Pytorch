@@ -1,6 +1,7 @@
-# import os
+import os
 from typing import Tuple
-# import numpy as np
+import numpy as np
+import cv2
 import wandb
 
 import torch
@@ -11,7 +12,7 @@ import torchvision.transforms as T
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set()
 
@@ -33,6 +34,11 @@ class MaskRCNNTrainer(Tranier):
         early_stopping_count: int = 1e10,
     ):
         self.out_dir = out_dir
+
+        # plot results
+        self.valid_images = []
+        self.valid_outputs = []
+        self.fig_segment_masks = plt.figure(figsize=(20, 10))
 
         def get_transform(train):
             transforms = []
@@ -143,37 +149,79 @@ class MaskRCNNTrainer(Tranier):
         valid: bool = False,
     ) -> torch.Tensor:
         images, targets = batch
-        # print(images)
-        # print(targets)
-
-        # images = list(image for image in images)
-        # targets = [{k: v for k, v in t.items()} for t in targets]
 
         images = [image.to(self.device) for image in images]
         targets = [
             {k: v.to(self.device) for k, v in target.items()}
             for target in targets
         ]
-        # images = images.to(self.device)
-        # targets = {k: v.to(self.device) for k, v in targets.items()}
-        # targets = targets.to(self.device)
-        # print(images)
-        # print(targets)
-        # print('boxes:', targets[0]['boxes'].shape)
-        # print('labels:', targets[0]['labels'].shape)
-        # print('masks:', targets[0]['masks'].shape)
 
-        losses = self.model(images, targets)
         if not valid:
+            losses = self.model(images, targets)
             total_loss = sum(losses.values())
             return total_loss
         else:
-            # output = self.model(images)
+            outputs = self.model(images)
+
+            images_np = [image.to('cpu').detach().numpy() for image in images]
+            output_np = [
+                {k: v.to('cpu').detach().numpy() for k, v in output.items()}
+                for output in outputs
+            ]
+            self.valid_images.extend(images_np)
+            self.valid_outputs.extend(output_np)
+
             return torch.zeros(1)
 
     def plot_results(self, epoch: int):
         if epoch % 100 == 0 or (epoch % 10 == 0 and epoch <= 100):
-            pass
+            self.plot_segmentation_masks(
+                self.fig_segment_masks,
+                self.valid_images,
+                self.valid_outputs,
+            )
+            self.fig_segment_masks.savefig(
+                os.path.join(self.out_dir, 'segment_masks.png'))
+
+            if self.wandb_flag:
+                wandb.log({
+                    'epoch': epoch,
+                    'segment_masks': wandb.Image(self.fig_segment_masks),
+                })
+
+    def plot_segmentation_masks(self, fig, images, outputs, epoch=0):
+        row, col = 5, 10
+        for i, (image, output) in enumerate(zip(images, outputs)):
+            ax = fig.add_subplot(row, col, i + 1)
+            image = image.transpose(1, 2, 0)
+            image = (255 * image).astype(np.uint8)
+            image = cv2.UMat(image)
+            for mask in output['masks'][:1]:
+                mask = mask.transpose(1, 2, 0)
+                mask = (255 * mask).astype(np.uint8)
+                mask = cv2.GaussianBlur(mask, (5, 5), 0)
+                ret, mask = cv2.threshold(
+                    mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+                contours, hierarchy = cv2.findContours(
+                    mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                # contours = list(
+                #     filter(lambda x: cv2.contourArea(x) > 100, contours))
+                contour = max(contours, key=lambda x: cv2.contourArea(x))
+                cv2.drawContours(
+                    image,
+                    [contour],
+                    -1,
+                    color=(0, 255, 0),
+                    thickness=10,
+                )
+                # image = cv2.addWeighted(image, 0.7, mask, 0.3, 0)
+            image = image.get()
+            ax.imshow(image)
+            # ax.imshow(mask)
+            ax.axis('off')
+
+        fig.suptitle('{} epoch'.format(epoch))
+        fig.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95)
 
     def train(self, n_epochs: int):
         return super().train(n_epochs, callback=self.plot_results)
