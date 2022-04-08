@@ -1,0 +1,10 @@
+autopep8
+flake8
+numpy
+matplotlib
+seaborn
+pandas
+tqdm
+scikit-learn
+opencv-python
+wandb
