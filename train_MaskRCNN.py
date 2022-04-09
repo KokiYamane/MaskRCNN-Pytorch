@@ -179,9 +179,11 @@ class MaskRCNNTrainer(Tranier):
                 self.fig_segment_masks,
                 self.valid_images,
                 self.valid_outputs,
+                epoch=epoch,
             )
             self.fig_segment_masks.savefig(
-                os.path.join(self.out_dir, 'segment_masks.png'))
+                os.path.join(self.out_dir, 'segment_masks.png'),
+            )
 
             if self.wandb_flag:
                 wandb.log({
@@ -189,14 +191,23 @@ class MaskRCNNTrainer(Tranier):
                     'segment_masks': wandb.Image(self.fig_segment_masks),
                 })
 
+        self.valid_images = []
+        self.valid_outputs = []
+
     def plot_segmentation_masks(self, fig, images, outputs, epoch=0):
+        fig.clf()
         row, col = 5, 10
         for i, (image, output) in enumerate(zip(images, outputs)):
             ax = fig.add_subplot(row, col, i + 1)
             image = image.transpose(1, 2, 0)
             image = (255 * image).astype(np.uint8)
             image = cv2.UMat(image)
-            for mask in output['masks'][:1]:
+            masks = output['masks']
+            scores = output['scores']
+            for mask, score in zip(masks, scores):
+                if score < 0.75:
+                    continue
+
                 mask = mask.transpose(1, 2, 0)
                 mask = (255 * mask).astype(np.uint8)
                 mask = cv2.GaussianBlur(mask, (5, 5), 0)
@@ -204,8 +215,6 @@ class MaskRCNNTrainer(Tranier):
                     mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                 contours, hierarchy = cv2.findContours(
                     mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                # contours = list(
-                #     filter(lambda x: cv2.contourArea(x) > 100, contours))
                 contour = max(contours, key=lambda x: cv2.contourArea(x))
                 cv2.drawContours(
                     image,
@@ -214,10 +223,8 @@ class MaskRCNNTrainer(Tranier):
                     color=(0, 255, 0),
                     thickness=10,
                 )
-                # image = cv2.addWeighted(image, 0.7, mask, 0.3, 0)
             image = image.get()
             ax.imshow(image)
-            # ax.imshow(mask)
             ax.axis('off')
 
         fig.suptitle('{} epoch'.format(epoch))
