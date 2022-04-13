@@ -40,7 +40,8 @@ class TestImageDataset(unittest.TestCase):
                 pass
                 print('#', i)
                 print('image shape:', images.shape)
-                print(targets['masks'].shape)
+                print('box shape:', targets['boxes'].shape)
+                print('mask shape:', targets['masks'].shape)
             end = time.time()
             print('elapsed time:', end - start)
 
