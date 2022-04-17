@@ -43,8 +43,8 @@ class MaskRCNNTrainer(Tranier):
         def get_transform(train):
             transforms = []
             transforms.append(T.ToTensor())
-            if train:
-                transforms.append(T.RandomHorizontalFlip(0.5))
+            # if train:
+            #     transforms.append(T.RandomHorizontalFlip(0.5))
             return T.Compose(transforms)
 
         train_dataset = PennFudanDataset(
@@ -57,8 +57,9 @@ class MaskRCNNTrainer(Tranier):
         )
         torch.manual_seed(1)
         indices = torch.randperm(len(train_dataset)).tolist()
-        train_dataset = torch.utils.data.Subset(train_dataset, indices[:-50])
-        valid_dataset = torch.utils.data.Subset(valid_dataset, indices[-50:])
+        N = int(len(valid_dataset) * 0.1)
+        train_dataset = torch.utils.data.Subset(train_dataset, indices[:-N])
+        valid_dataset = torch.utils.data.Subset(valid_dataset, indices[-N:])
 
         def collate_fn(batch):
             return tuple(zip(*batch))
@@ -67,7 +68,7 @@ class MaskRCNNTrainer(Tranier):
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            num_workers=4,
+            # num_workers=4,
             pin_memory=True,
             collate_fn=collate_fn,
         )
@@ -75,7 +76,7 @@ class MaskRCNNTrainer(Tranier):
             valid_dataset,
             batch_size=batch_size,
             shuffle=False,
-            num_workers=4,
+            # num_workers=4,
             pin_memory=True,
             collate_fn=collate_fn,
         )
@@ -198,7 +199,8 @@ class MaskRCNNTrainer(Tranier):
 
     def plot_segmentation_masks(self, fig, images, outputs, epoch=0):
         fig.clf()
-        row, col = 5, 10
+        # row, col = 5, 10
+        row, col = 1, 5
         for i, (image, output) in enumerate(zip(images, outputs)):
             ax = fig.add_subplot(row, col, i + 1)
             image = image.transpose(1, 2, 0)
@@ -254,7 +256,7 @@ def argparse():
                         default='../datasets/PennFudanPed/')
     parser.add_argument('--output', type=str, default='./results/test/')
     parser.add_argument('--epoch', type=int, default=10000)
-    parser.add_argument('--batch_size', type=int, default=2)
+    parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--early_stopping', type=int, default=1e10)
     parser.add_argument('--wandb', action='store_true')
