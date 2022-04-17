@@ -67,14 +67,16 @@ class MaskRCNNTrainer(Tranier):
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            # num_workers=4,
+            num_workers=4,
+            pin_memory=True,
             collate_fn=collate_fn,
         )
         valid_loader = torch.utils.data.DataLoader(
             valid_dataset,
             batch_size=batch_size,
             shuffle=False,
-            # num_workers=4,
+            num_workers=4,
+            pin_memory=True,
             collate_fn=collate_fn,
         )
 
