@@ -74,6 +74,7 @@ class MaskRCNNTrainer(Trainer):
             num_workers=args.num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
+            drop_last=True,
         )
         valid_loader = torch.utils.data.DataLoader(
             valid_dataset,
@@ -82,6 +83,7 @@ class MaskRCNNTrainer(Trainer):
             num_workers=args.num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
+            # drop_last=True,
         )
 
         print('train data num:', len(train_dataset))
@@ -203,7 +205,7 @@ class MaskRCNNTrainer(Trainer):
     def plot_segmentation_masks(self, fig, images, outputs, epoch=0):
         fig.clf()
         # row, col = 5, 10
-        row, col = 1, 5
+        row, col = 2, 5
         for i, (image, output) in enumerate(zip(images, outputs)):
             ax = fig.add_subplot(row, col, i + 1)
             image = image.transpose(1, 2, 0)
