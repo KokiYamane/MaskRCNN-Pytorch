@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import Tuple
 import numpy as np
@@ -19,10 +20,10 @@ sns.set()
 import sys
 sys.path.append('.')
 from PennFudanDataset import PennFudanDataset
-from Trainer import Tranier
+from Trainer import Trainer
 
 
-class MaskRCNNTrainer(Tranier):
+class MaskRCNNTrainer(Trainer):
     def __init__(
         self,
         data_path: str,
@@ -32,6 +33,8 @@ class MaskRCNNTrainer(Tranier):
         wandb_flag: bool,
         gpu: list = [0],
         early_stopping_count: int = 1e10,
+        num_workers: int = 1,
+        checkpoint_path: str = None,
     ):
         self.out_dir = out_dir
 
@@ -68,7 +71,7 @@ class MaskRCNNTrainer(Tranier):
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            # num_workers=4,
+            num_workers=args.num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
         )
@@ -76,7 +79,7 @@ class MaskRCNNTrainer(Tranier):
             valid_dataset,
             batch_size=batch_size,
             shuffle=False,
-            # num_workers=4,
+            num_workers=args.num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
         )
@@ -110,11 +113,11 @@ class MaskRCNNTrainer(Tranier):
             out_dir=out_dir,
             wandb_flag=wandb_flag,
             gpu=gpu,
-            early_stopping_count=early_stopping_count,
+            checkpoint_path=checkpoint_path,
         )
 
         if wandb_flag:
-            wandb.init(project='MaskRCNN')
+            wandb.init(project='MaskRCNN', name=out_dir)
             config = wandb.config
             config.data_path = data_path
             config.batch_size = batch_size
@@ -239,14 +242,19 @@ class MaskRCNNTrainer(Tranier):
 
 
 def main(args):
-    MaskRCNNTrainer(
+    trainer = MaskRCNNTrainer(
         data_path=args.data,
         out_dir=args.output,
         batch_size=args.batch_size,
         learning_rate=args.learning_rate,
         wandb_flag=args.wandb,
         gpu=args.gpu,
-    ).train(args.epoch)
+        num_workers=args.num_workers,
+        checkpoint_path=args.checkpoint,
+    )
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(trainer.train(args.epoch))
 
 
 def argparse():
@@ -260,11 +268,11 @@ def argparse():
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--early_stopping', type=int, default=1e10)
     parser.add_argument('--wandb', action='store_true')
+    parser.add_argument('--num_workers', type=int, default=4)
+    parser.add_argument('--checkpoint', type=str, default=None)
+    parser.add_argument('--gpu', default='0',
+                        type=lambda x: list(map(int, x.split(','))))
 
-    def tp(x):
-        return list(map(int, x.split(',')))
-
-    parser.add_argument('--gpu', type=tp, default='0')
     args = parser.parse_args()
     return args
 
