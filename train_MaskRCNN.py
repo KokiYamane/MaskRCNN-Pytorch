@@ -212,7 +212,7 @@ class MaskRCNNTrainer(Tranier):
             masks = output['masks']
             scores = output['scores']
             for mask, score in zip(masks, scores):
-                if score < 0.2:
+                if score < 0.75:
                     continue
 
                 mask = mask.transpose(1, 2, 0)
@@ -230,7 +230,7 @@ class MaskRCNNTrainer(Tranier):
                     # color=(0, 255, 0),
                     # thickness=10,
                     color=(0, int(255 * score), 0),
-                    thickness=int(5 * score),
+                    thickness=int(10 * score),
                 )
             image = image.get()
             ax.imshow(image)

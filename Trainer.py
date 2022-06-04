@@ -140,7 +140,7 @@ class Tranier():
             print(log)
 
             # save model
-            if epoch % 100 == 0:
+            if epoch % 100 == 0 or epoch < 100:
                 encoder_param_dir = os.path.join(self.out_dir, 'model_param')
                 if not os.path.exists(encoder_param_dir):
                     os.mkdir(encoder_param_dir)
@@ -171,7 +171,7 @@ class Tranier():
                 })
                 wandb.save(path_checkpoint)
 
-            if valid_loss < self.best_test:
+            if valid_loss <= self.best_test:
                 self.best_test = valid_loss
                 self.early_stopping_counter = 0
 
