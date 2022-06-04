@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 import cv2
 import wandb
+import math
 
 import torch
 # import torch.nn as nn
@@ -202,7 +203,7 @@ class MaskRCNNTrainer(Tranier):
         # row, col = 5, 10
         # row, col = 1, 5
         col = 5
-        row = -(-len(images) // -5)
+        row = math.ceil(len(images) / 5)
         for i, (image, output) in enumerate(zip(images, outputs)):
             ax = fig.add_subplot(row, col, i + 1)
             image = image.transpose(1, 2, 0)
