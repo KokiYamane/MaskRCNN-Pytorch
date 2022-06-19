@@ -10,13 +10,17 @@ class PennFudanDataset(torch.utils.data.Dataset):
         self.transforms = transforms
         # load all image files, sorting them to
         # ensure that they are aligned
-        self.imgs = list(sorted(os.listdir(os.path.join(root, "originals"))))
-        self.masks = list(sorted(os.listdir(os.path.join(root, "instance_segmentations"))))
+        self.imgs = list(sorted(
+            os.listdir(os.path.join(root, "originals"))))
+        self.masks = list(sorted(
+            os.listdir(os.path.join(root, "instance_segmentations"))))
 
     def __getitem__(self, idx):
         # load images and masks
-        img_path = os.path.join(self.root, "originals", self.imgs[idx])
-        mask_path = os.path.join(self.root, "instance_segmentations", self.masks[idx])
+        img_path = os.path.join(
+            self.root, "originals", self.imgs[idx])
+        mask_path = os.path.join(
+            self.root, "instance_segmentations", self.masks[idx])
         img = Image.open(img_path).convert("RGB")
         # note that we haven't converted the mask to RGB,
         # because each color corresponds to a different instance
@@ -48,6 +52,11 @@ class PennFudanDataset(torch.utils.data.Dataset):
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
         # there is only one class
         labels = torch.ones((num_objs,), dtype=torch.int64)
+
+        if self.transforms is not None:
+            img = self.transforms(img)
+            masks = self.transforms(masks)
+
         masks = torch.as_tensor(masks, dtype=torch.uint8)
 
         image_id = torch.tensor([idx])
@@ -62,11 +71,6 @@ class PennFudanDataset(torch.utils.data.Dataset):
         target["image_id"] = image_id
         target["area"] = area
         target["iscrowd"] = iscrowd
-
-        if self.transforms is not None:
-            # img, target = self.transforms(img, target)
-            img = self.transforms(img)
-            # target = self.transforms(target)
 
         return img, target
 
