@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 import cv2
 import wandb
+import math
 
 import torch
 # import torch.nn as nn
@@ -116,7 +117,7 @@ class MaskRCNNTrainer(Tranier):
         )
 
         if wandb_flag:
-            wandb.init(project='MaskRCNN')
+            wandb.init(project='MaskRCNN', name=out_dir)
             config = wandb.config
             config.data_path = data_path
             config.batch_size = batch_size
@@ -179,7 +180,7 @@ class MaskRCNNTrainer(Tranier):
             return torch.zeros(1)
 
     def plot_results(self, epoch: int):
-        if epoch % 100 == 0 or (epoch % 10 == 0 and epoch <= 100):
+        if epoch % 100 == 0 or (epoch % 1 == 0 and epoch <= 100):
             self.plot_segmentation_masks(
                 self.fig_segment_masks,
                 self.valid_images,
@@ -202,7 +203,9 @@ class MaskRCNNTrainer(Tranier):
     def plot_segmentation_masks(self, fig, images, outputs, epoch=0):
         fig.clf()
         # row, col = 5, 10
-        row, col = 2, 5
+        # row, col = 1, 5
+        col = 5
+        row = math.ceil(len(images) / 5)
         for i, (image, output) in enumerate(zip(images, outputs)):
             ax = fig.add_subplot(row, col, i + 1)
             image = image.transpose(1, 2, 0)
@@ -226,8 +229,10 @@ class MaskRCNNTrainer(Tranier):
                     image,
                     [contour],
                     -1,
-                    color=(0, 255, 0),
-                    thickness=10,
+                    # color=(0, 255, 0),
+                    # thickness=10,
+                    color=(0, int(255 * score), 0),
+                    thickness=int(10 * score),
                 )
             image = image.get()
             ax.imshow(image)

@@ -22,10 +22,25 @@ RUN apt-get update && \
     curl \
     git \
     vim \
-    python3-pip
+    python3-pip \
+    screen
+
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
+
+# fix opencv error
+RUN apt-get update && \
+    apt-get install -y \
+    libgl1-mesa-dev \
+    libglib2.0-0
+# RUN apt-get update && apt-get upgrade -y
+# RUN apt-get install -y libgl1-mesa-dev
+# RUN apt-get update && apt-get install -y libglib2.0-0
+
+# Add the following line to get native library of OpenCV.
+# RUN apt-get install -y libopencv-dev
 
 # install fish
-RUN apt-get update && apt-get install -y fish
+RUN apt-get install -y fish
 SHELL ["/usr/bin/fish", "-c"]
 
 # install fish plagin
@@ -38,11 +53,5 @@ WORKDIR /root/requirements
 ADD requirements.txt /root/requirements
 RUN pip3 install -r requirements.txt
 RUN pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
-
-# fix opencv error
-RUN apt-get update && \
-    apt-get install -y \
-    libgl1-mesa-dev \
-    libglib2.0-0
 
 WORKDIR /root/workspace
