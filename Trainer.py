@@ -64,13 +64,21 @@ class Tranier():
         self,
         i: int,
         length: int,
+        start_time: time.time,
         width: int = None,
         end: str = '\n',
         header: str = '',
+        footer: str = '',
     ):
         digits = len(str(length))
         i_str = format(i + 1, '0' + str(digits))
-        footer = '{}/{}'.format(i_str, length)
+        now = time.time()
+        elapsed_time = now - start_time
+        total_time = elapsed_time / (i + 1) * length
+        footer_count = f'{i_str}/{length}'
+        footer_time = f'({elapsed_time:.2f} [s] / {total_time:.2f} [s])'
+        footer = f'{footer_count} {footer_time}  {footer}'
+
         if width is None:
             terminal_size = shutil.get_terminal_size()
             width = terminal_size.columns - len(header) - len(footer) - 5
@@ -82,8 +90,8 @@ class Tranier():
             num = round(i / (length - 1) * width)
             progress_bar = '=' * (num - 1) + '>' + ' ' * (width - num)
             end = ''
-        print('\r\033[K{} [{}] {}'.format(
-            header, progress_bar, footer), end=end)
+
+        print('\r\033[K' + f'{header} [{progress_bar}] {footer}', end=end)
 
     def train(
         self,
@@ -97,21 +105,27 @@ class Tranier():
             running_loss = 0.0
             self.model.train()
             for i, batch in enumerate(self.train_loader):
+                self._print_progress_bar(
+                    i,
+                    len(self.train_loader),
+                    start_time=start,
+                    end='',
+                    header=f'epoch: {epoch} (train)',
+                )
+
                 with torch.cuda.amp.autocast():
                     loss = self.calc_loss(batch)
 
-                    self.scaler.scale(loss).backward()
-                    self.scaler.step(self.optimizer)
-                    self.scaler.update()
-                    # loss.backward()
-                    # self.optimizer.step()
-                    self.optimizer.zero_grad()
+                self.optimizer.zero_grad()
+
+                self.scaler.scale(loss).backward()
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
+                # loss.backward()
+                # self.optimizer.step()
 
                 running_loss += loss.item()
 
-                header = f'epoch: {epoch}'
-                self._print_progress_bar(
-                    i, len(self.train_loader), end='', header=header)
             train_loss = running_loss / len(self.train_loader)
             self.train_losses.append(train_loss)
 
@@ -119,9 +133,18 @@ class Tranier():
                 self.lr_scheduler.step()
 
             # valid
+            valid_start = time.time()
             running_loss = 0.0
             self.model.eval()
-            for batch in self.valid_loader:
+            for i, batch in enumerate(self.valid_loader):
+                self._print_progress_bar(
+                    i,
+                    len(self.valid_loader),
+                    start_time=valid_start,
+                    end='',
+                    header=f'epoch: {epoch} (valid)',
+                )
+
                 with torch.no_grad():
                     loss = self.calc_loss(batch, valid=True)
                 running_loss += loss.item()

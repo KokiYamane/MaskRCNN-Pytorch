@@ -33,6 +33,7 @@ class MaskRCNNTrainer(Tranier):
         wandb_flag: bool,
         gpu: list = [0],
         early_stopping_count: int = 1e10,
+        num_workers: int = 1,
     ):
         self.out_dir = out_dir
 
@@ -69,15 +70,16 @@ class MaskRCNNTrainer(Tranier):
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            # num_workers=4,
+            # num_workers=num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
+            # drop_last=True,
         )
         valid_loader = torch.utils.data.DataLoader(
             valid_dataset,
             batch_size=batch_size,
             shuffle=False,
-            # num_workers=4,
+            # num_workers=num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
         )
@@ -115,7 +117,10 @@ class MaskRCNNTrainer(Tranier):
         )
 
         if wandb_flag:
-            wandb.init(project='MaskRCNN', name=out_dir)
+            wandb.init(
+                project='MaskRCNN',
+                name=os.path.basename(out_dir),
+            )
             config = wandb.config
             config.data_path = data_path
             config.batch_size = batch_size
@@ -222,6 +227,10 @@ class MaskRCNNTrainer(Tranier):
                     mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
                 contours, hierarchy = cv2.findContours(
                     mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+                if len(contours) == 0:
+                    continue
+
                 contour = max(contours, key=lambda x: cv2.contourArea(x))
                 cv2.drawContours(
                     image,
@@ -251,6 +260,7 @@ def main(args):
         learning_rate=args.learning_rate,
         wandb_flag=args.wandb,
         gpu=args.gpu,
+        num_workers=args.num_workers,
     ).train(args.epoch)
 
 
@@ -265,6 +275,7 @@ def argparse():
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--early_stopping', type=int, default=1e10)
     parser.add_argument('--wandb', action='store_true')
+    parser.add_argument('--num_workers', type=int, default=1)
 
     def tp(x):
         return list(map(int, x.split(',')))
