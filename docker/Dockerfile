@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.2.0-devel-ubuntu20.04
+FROM nvidia/cuda:11.3.0-devel-ubuntu20.04
 # FROM --platform=linux/amd64 ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -52,6 +52,13 @@ RUN fisher install jethrokuan/z
 WORKDIR /root/requirements
 ADD requirements.txt /root/requirements
 RUN pip3 install -r requirements.txt
+
+# install pytorch
 RUN pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+
+# install MMRotate
+RUN pip3 install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
+RUN pip3 install mmdet
+RUN pip3 install mmrotate
 
 WORKDIR /root/workspace
