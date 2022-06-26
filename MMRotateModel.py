@@ -6,9 +6,13 @@ from mmrotate.models import build_detector
 from mmcv.runner import load_checkpoint
 
 
+default_config_path = '../mmrotate/configs/rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90.py'
+default_checkpoint_path = 'rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90/rotated_retinanet_obb_r50_fpn_1x_dota_le90-c0097bc4.pth'
+
+
 def get_model_MMRotate(
-    config_path: str,
-    checkpoint_path: str,
+    config_path: str = default_config_path,
+    checkpoint_path: str = default_checkpoint_path,
     device: str = 'cuda',
 ):
     MMRotateModel_path = 'MMRotateModels/'
@@ -41,10 +45,8 @@ def get_model_MMRotate(
 
 
 def main():
-    config_path = '../mmrotate/configs/rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90.py'
-    checkpoint_path = 'rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90/rotated_retinanet_obb_r50_fpn_1x_dota_le90-c0097bc4.pth'
 
-    model = get_model_MMRotate(config_path, checkpoint_path)
+    model = get_model_MMRotate()
     # print(model)
     print('Classes:', model.CLASSES)
 
