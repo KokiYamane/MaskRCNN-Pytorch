@@ -32,12 +32,6 @@ RUN apt-get update && \
     apt-get install -y \
     libgl1-mesa-dev \
     libglib2.0-0
-# RUN apt-get update && apt-get upgrade -y
-# RUN apt-get install -y libgl1-mesa-dev
-# RUN apt-get update && apt-get install -y libglib2.0-0
-
-# Add the following line to get native library of OpenCV.
-# RUN apt-get install -y libopencv-dev
 
 # install fish
 RUN apt-get install -y fish
@@ -60,5 +54,8 @@ RUN pip3 install torch torchvision torchaudio --extra-index-url https://download
 RUN pip3 install mmcv-full -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/index.html
 RUN pip3 install mmdet
 RUN pip3 install mmrotate
+
+WORKDIR /root
+RUN git clone https://github.com/open-mmlab/mmrotate.git
 
 WORKDIR /root/workspace
