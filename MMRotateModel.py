@@ -1,9 +1,10 @@
-import os
-import urllib.request
+# import os
+# import urllib.request
+import time
 
-import mmcv
-from mmrotate.models import build_detector
-from mmcv.runner import load_checkpoint
+# import mmcv
+from mmrotate.models import build_detector  # noqa: F401
+# from mmcv.runner import load_checkpoint
 from mmdet.apis import inference_detector, init_detector, show_result_pyplot
 
 # KLD
@@ -15,46 +16,38 @@ from mmdet.apis import inference_detector, init_detector, show_result_pyplot
 # default_checkpoint_path = 'redet/redet_re50_fpn_1x_dota_ms_rr_le90/redet_re50_fpn_1x_dota_ms_rr_le90-fc9217b5.pth'
 
 # KFIoU
-default_config_path = '../mmrotate/configs/rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc.py'
-default_checkpoint_path = 'rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc/rotated_retinanet_hbb_r50_fpn_1x_dota_oc-e8a7c7df.pth'
+# default_config_path = '../mmrotate/configs/rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc.py'
+# default_checkpoint_path = 'rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc/rotated_retinanet_hbb_r50_fpn_1x_dota_oc-e8a7c7df.pth'
 
 
-def get_model_MMRotate(
-    config_path: str = default_config_path,
-    checkpoint_path: str = default_checkpoint_path,
-    device: str = 'cuda',
-    # pretrained: bool = None,
-):
-    MMRotateModel_path = 'MMRotateModels/'
+# def get_model_MMRotate(
+#     config_path: str = default_config_path,
+#     checkpoint_path: str = default_checkpoint_path,
+#     device: str = 'cuda',
+#     download: bool = False,
+#     # pretrained: bool = None,
+# ):
+#     if download:
+#         # download model params if it doesn't exist
+#         MMRotateModel_path = './MMRotateModels/'
+#         checkpoint_save_path = os.path.join(MMRotateModel_path, checkpoint_path)
+#         base_url = 'https://download.openmmlab.com/mmrotate/v0.1.0/'
+#         checkpoint_save_path = checkpoint_path.replace(
+#             base_url, MMRotateModel_path)
+#         if not os.path.exists(checkpoint_save_path):
+#             download_path = base_url + checkpoint_path
+#             print(f'Downloading checkpoint from {download_path}')
 
-    # download model params if it doesn't exist
-    checkpoint_save_path = os.path.join(MMRotateModel_path, checkpoint_path)
-    if not os.path.exists(checkpoint_save_path):
-        base_url = 'https://download.openmmlab.com/mmrotate/v0.1.0/'
-        download_path = base_url + checkpoint_path
-        print(f'Downloading checkpoint from {download_path}')
+#             # make directory if it doesn't exist
+#             dirname = os.path.dirname(checkpoint_path)
+#             if not os.path.exists(dirname):
+#                 os.makedirs(dirname)
 
-        # make directory if it doesn't exist
-        dirname = os.path.dirname(checkpoint_save_path)
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
+#             urllib.request.urlretrieve(download_path, checkpoint_save_path)
 
-        urllib.request.urlretrieve(download_path, checkpoint_save_path)
+#     model = init_detector(config_path, checkpoint_path, device=device)
 
-    # print('load config from local path:', config_path)
-    # config = mmcv.Config.fromfile(config_path)
-    # config.model.pretrained = pretrained
-    # model = build_detector(config.model)
-    # model.to(device)
-
-    # checkpoint = load_checkpoint(
-    #     model, checkpoint_save_path, map_location=device)
-    # model.CLASSES = checkpoint['meta']['CLASSES']
-    # model.cfg = config
-
-    model = init_detector(config_path, checkpoint_save_path, device=device)
-
-    return model
+#     return model
 
 
 def argparse():
@@ -64,9 +57,13 @@ def argparse():
                         default='../mmrotate/demo/demo.jpg')
     parser.add_argument('--output', type=str,
                         default='./results/MMRotate_demo_result.jpg')
-    parser.add_argument('--epoch', type=int, default=10000)
-    parser.add_argument('--batch_size', type=int, default=4)
-    parser.add_argument('--learning_rate', type=float, default=0.001)
+    parser.add_argument('--config', type=str,
+                        default='../mmrotate/configs/rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc.py')
+    parser.add_argument('--checkpoint', type=str,
+                        default='https://download.openmmlab.com/mmrotate/v0.1.0/rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc/rotated_retinanet_hbb_r50_fpn_1x_dota_oc-e8a7c7df.pth')
+    # parser.add_argument('--epoch', type=int, default=10000)
+    # parser.add_argument('--batch_size', type=int, default=4)
+    # parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--gpu', default='0',
                         type=lambda x: list(map(int, x.split(','))))
     args = parser.parse_args()
@@ -74,18 +71,24 @@ def argparse():
 
 
 def main(args):
-    model = get_model_MMRotate()
+    # model = get_model_MMRotate(
+    #     config_path=args.config,
+    #     checkpoint_path=args.checkpoint,
+    # )
+    model = init_detector(
+        args.config,
+        args.checkpoint,
+        device='cuda',
+    )
     # print(model)
     print('Classes:', model.CLASSES)
 
     # Inference
-    # img = '../mmrotate/demo/demo.jpg'
-    # import mmdet.apis
-    import time
     start = time.time()
     result = inference_detector(model, args.image)
     end = time.time()
     print(f'Inference time: {end - start:.6f} [s]')
+    print(result)
 
     # 結果の表示
     show_result_pyplot(

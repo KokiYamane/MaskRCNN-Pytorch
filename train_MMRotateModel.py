@@ -20,24 +20,25 @@ def main(args):
     config = mmcv.Config.fromfile(config_path)
 
     data_path = './data/ssdd_tiny/'
+    dateset_type = 'TinyDataset'
 
-    config.dataset_type = 'TinyDataset'
+    config.dataset_type = dateset_type
     config.data_root = args.data
 
     # test
-    config.data.test.type = 'TinyDataset'
+    config.data.test.type = dateset_type
     config.data.test.data_root = data_path
     config.data.test.ann_file = 'val'
     config.data.test.img_prefix = 'images'
 
     # train
-    config.data.train.type = 'TinyDataset'
+    config.data.train.type = dateset_type
     config.data.train.data_root = data_path
     config.data.train.ann_file = 'train'
     config.data.train.img_prefix = 'images'
 
     # val
-    config.data.val.type = 'TinyDataset'
+    config.data.val.type = dateset_type
     config.data.val.data_root = data_path
     config.data.val.ann_file = 'val'
     config.data.val.img_prefix = 'images'
@@ -75,6 +76,9 @@ def main(args):
 
     # make dataset
     datasets = [mmdet.datasets.build_dataset(config.data.train)]
+    # config.workflow = [('train', 1), ('val', 1)]
+    # if len(config.workflow) == 2:
+    #     datasets.append(mmdet.datasets.build_dataset(config.data.val))
 
     # make model
     model_for_train = mmdet.models.build_detector(
@@ -98,7 +102,8 @@ def main(args):
         datasets,
         config,
         distributed=False,
-        validate=True,
+        # validate=True,
+        validate=False,
     )
     end = time.time()
     print(f'Training time: {end - start:%2f} sec')
@@ -111,7 +116,7 @@ def argparse():
     parser.add_argument('--output', type=str,
                         default='./results/MMRotate_test/')
     parser.add_argument('--epoch', type=int, default=10000)
-    parser.add_argument('--batch_size', type=int, default=4)
+    # parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--gpu', default='0',
                         type=lambda x: list(map(int, x.split(','))))
