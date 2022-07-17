@@ -5,6 +5,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
+    shm_size: '2gb'
     volumes:
       - ../:/root/workspace/
       - ../../datasets:/root/datasets/
