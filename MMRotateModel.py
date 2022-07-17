@@ -4,6 +4,7 @@ import urllib.request
 import mmcv
 from mmrotate.models import build_detector
 from mmcv.runner import load_checkpoint
+from mmdet.apis import inference_detector, init_detector, show_result_pyplot
 
 # KLD
 # default_config_path = '../mmrotate/configs/rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90.py'
@@ -22,7 +23,7 @@ def get_model_MMRotate(
     config_path: str = default_config_path,
     checkpoint_path: str = default_checkpoint_path,
     device: str = 'cuda',
-    pretrained: bool = None,
+    # pretrained: bool = None,
 ):
     MMRotateModel_path = 'MMRotateModels/'
 
@@ -40,16 +41,18 @@ def get_model_MMRotate(
 
         urllib.request.urlretrieve(download_path, checkpoint_save_path)
 
-    print('load config from local path:', config_path)
-    config = mmcv.Config.fromfile(config_path)
-    config.model.pretrained = pretrained
-    model = build_detector(config.model)
-    model.to(device)
+    # print('load config from local path:', config_path)
+    # config = mmcv.Config.fromfile(config_path)
+    # config.model.pretrained = pretrained
+    # model = build_detector(config.model)
+    # model.to(device)
 
-    checkpoint = load_checkpoint(
-        model, checkpoint_save_path, map_location=device)
-    model.CLASSES = checkpoint['meta']['CLASSES']
-    model.cfg = config
+    # checkpoint = load_checkpoint(
+    #     model, checkpoint_save_path, map_location=device)
+    # model.CLASSES = checkpoint['meta']['CLASSES']
+    # model.cfg = config
+
+    model = init_detector(config_path, checkpoint_save_path, device=device)
 
     return model
 
@@ -77,15 +80,15 @@ def main(args):
 
     # Inference
     # img = '../mmrotate/demo/demo.jpg'
-    import mmdet.apis
+    # import mmdet.apis
     import time
     start = time.time()
-    result = mmdet.apis.inference_detector(model, args.image)
+    result = inference_detector(model, args.image)
     end = time.time()
     print(f'Inference time: {end - start:.6f} [s]')
 
     # 結果の表示
-    mmdet.apis.show_result_pyplot(
+    show_result_pyplot(
         model,
         args.image,
         result,
