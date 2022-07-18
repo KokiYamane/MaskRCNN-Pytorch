@@ -88,13 +88,13 @@ def main(args):
     result = inference_detector(model, args.image)
     end = time.time()
     print(f'Inference time: {end - start:.6f} [s]')
-    print(result)
+    print(result[0])
 
     # 結果の表示
     show_result_pyplot(
         model,
         args.image,
-        result,
+        [result[0]],
         score_thr=0.3,
         palette='dota',
         out_file=args.output,

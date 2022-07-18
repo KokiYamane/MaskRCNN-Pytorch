@@ -13,7 +13,8 @@ checkpoint_path = './MMRotateModels/rotated_retinanet/rotated_retinanet_obb_r50_
 
 @ROTATED_DATASETS.register_module()
 class TinyDataset(DOTADataset):
-    CLASSES = ('ship',)
+    # CLASSES = ('ship',)
+    CLASSES = ('object',)
 
 
 def main(args):
