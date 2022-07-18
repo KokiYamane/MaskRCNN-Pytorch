@@ -10,7 +10,13 @@ def main(args):
     df = pd.read_json(args.data, lines=True)
     print(df)
 
+    plt.figure(figsize=(12, 8))
     plt.plot(df['epoch'], df['loss'], label='loss')
+    plt.plot(df['epoch'], df['loss_cls'], label='loss_cls')
+    plt.plot(df['epoch'], df['loss_bbox'], label='loss_bbox')
+    plt.legend()
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
     plt.savefig(args.output)
 
 
