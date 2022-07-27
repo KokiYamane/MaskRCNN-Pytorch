@@ -50,26 +50,6 @@ from mmdet.apis import inference_detector, init_detector, show_result_pyplot
 #     return model
 
 
-def argparse():
-    from argparse import ArgumentParser
-    parser = ArgumentParser()
-    parser.add_argument('--image', type=str,
-                        default='../mmrotate/demo/demo.jpg')
-    parser.add_argument('--output', type=str,
-                        default='./results/MMRotate_demo_result.jpg')
-    parser.add_argument('--config', type=str,
-                        default='../mmrotate/configs/rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc.py')
-    parser.add_argument('--checkpoint', type=str,
-                        default='https://download.openmmlab.com/mmrotate/v0.1.0/rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc/rotated_retinanet_hbb_r50_fpn_1x_dota_oc-e8a7c7df.pth')
-    # parser.add_argument('--epoch', type=int, default=10000)
-    # parser.add_argument('--batch_size', type=int, default=4)
-    # parser.add_argument('--learning_rate', type=float, default=0.001)
-    parser.add_argument('--gpu', default='0',
-                        type=lambda x: list(map(int, x.split(','))))
-    args = parser.parse_args()
-    return args
-
-
 def main(args):
     # model = get_model_MMRotate(
     #     config_path=args.config,
@@ -94,11 +74,32 @@ def main(args):
     show_result_pyplot(
         model,
         args.image,
+        # result,
         [result[0]],
         score_thr=0.3,
         palette='dota',
         out_file=args.output,
     )
+
+
+def argparse():
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument('--image', type=str,
+                        default='../mmrotate/demo/demo.jpg')
+    parser.add_argument('--output', type=str,
+                        default='./results/MMRotate_demo_result.jpg')
+    parser.add_argument('--config', type=str,
+                        default='../mmrotate/configs/rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc.py')
+    parser.add_argument('--checkpoint', type=str,
+                        default='https://download.openmmlab.com/mmrotate/v0.1.0/rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc/rotated_retinanet_hbb_r50_fpn_1x_dota_oc-e8a7c7df.pth')
+    # parser.add_argument('--epoch', type=int, default=10000)
+    # parser.add_argument('--batch_size', type=int, default=4)
+    # parser.add_argument('--learning_rate', type=float, default=0.001)
+    parser.add_argument('--gpu', default='0',
+                        type=lambda x: list(map(int, x.split(','))))
+    args = parser.parse_args()
+    return args
 
 
 if __name__ == '__main__':

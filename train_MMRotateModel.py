@@ -13,8 +13,8 @@ checkpoint_path = './MMRotateModels/rotated_retinanet/rotated_retinanet_obb_r50_
 
 @ROTATED_DATASETS.register_module()
 class TinyDataset(DOTADataset):
-    # CLASSES = ('ship',)
-    CLASSES = ('object',)
+    CLASSES = ('ship',)
+    # CLASSES = ('object',)
 
 
 def main(args):
@@ -49,7 +49,7 @@ def main(args):
     # config.model.roi_head.bbox_head[1].num_classes = 1
 
     # model path
-    config.load_from = checkpoint_path
+    # config.load_from = checkpoint_path
 
     # output path
     config.work_dir = args.output
