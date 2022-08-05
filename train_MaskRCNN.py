@@ -19,7 +19,7 @@ sns.set()
 
 import sys
 sys.path.append('.')
-from PennFudanDataset import PennFudanDataset
+from InstanceSegmentationDataset import InstanceSegmentationDataset
 from Trainer import Tranier
 
 
@@ -49,11 +49,11 @@ class MaskRCNNTrainer(Tranier):
             #     transforms.append(T.RandomHorizontalFlip(0.5))
             return T.Compose(transforms)
 
-        train_dataset = PennFudanDataset(
+        train_dataset = InstanceSegmentationDataset(
             data_path,
             get_transform(train=True),
         )
-        valid_dataset = PennFudanDataset(
+        valid_dataset = InstanceSegmentationDataset(
             data_path,
             get_transform(train=False),
         )
@@ -204,7 +204,7 @@ class MaskRCNNTrainer(Tranier):
         self.valid_images = []
         self.valid_outputs = []
 
-    def plot_segmentation_masks(self, fig, images, outputs, epoch=0):
+    def plot_segmentation_masks(self, fig, images, outputs, epoch=0, n_class=2):
         fig.clf()
         # row, col = 5, 10
         # row, col = 1, 5
@@ -217,11 +217,17 @@ class MaskRCNNTrainer(Tranier):
             image = cv2.UMat(image)
             masks = output['masks']
             scores = output['scores']
-            for mask, score in zip(masks, scores):
-                if score < 0.75:
+            labels = output['labels']
+            # print(labels)
+            # print(scores)
+            # print(output['boxes'])
+            for mask, score, label in zip(masks, scores, labels):
+                if score < 0.25:
                     continue
 
                 mask = mask.transpose(1, 2, 0)
+                # print(mask)
+                # print('max:', np.max(mask))
                 mask = (255 * mask).astype(np.uint8)
                 mask = cv2.GaussianBlur(mask, (5, 5), 0)
                 ret, mask = cv2.threshold(
@@ -229,8 +235,13 @@ class MaskRCNNTrainer(Tranier):
                 contours, hierarchy = cv2.findContours(
                     mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+                # print(contours)
+
                 if len(contours) == 0:
                     continue
+
+                R = int(255 * label / n_class)
+                color = (R, int(255 * score), 0)
 
                 contour = max(contours, key=lambda x: cv2.contourArea(x))
                 cv2.drawContours(
@@ -239,7 +250,7 @@ class MaskRCNNTrainer(Tranier):
                     -1,
                     # color=(0, 255, 0),
                     # thickness=10,
-                    color=(0, int(255 * score), 0),
+                    color=color,
                     thickness=int(10 * score),
                 )
             image = image.get()
@@ -277,11 +288,8 @@ def argparse():
     parser.add_argument('--early_stopping', type=int, default=1e10)
     parser.add_argument('--wandb', action='store_true')
     parser.add_argument('--num_workers', type=int, default=1)
-
-    def tp(x):
-        return list(map(int, x.split(',')))
-
-    parser.add_argument('--gpu', type=tp, default='0')
+    parser.add_argument('--gpu', default='0',
+                        type=lambda x: list(map(int, x.split(','))))
     args = parser.parse_args()
     return args
 

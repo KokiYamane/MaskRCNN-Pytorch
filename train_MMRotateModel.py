@@ -7,9 +7,20 @@ import mmcv
 import mmdet
 import mmdet.apis
 
-config_path = '../mmrotate/configs/rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90.py'
-checkpoint_path = './MMRotateModels/rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90/rotated_retinanet_obb_r50_fpn_1x_dota_le90-c0097bc4.pth'
+# config_path = '../mmrotate/configs/rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90.py'
+# checkpoint_path = './MMRotateModels/rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90/rotated_retinanet_obb_r50_fpn_1x_dota_le90-c0097bc4.pth'
 
+# KLD
+config_path = '../mmrotate/configs/rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90.py'
+checkpoint_path = 'rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90/rotated_retinanet_obb_r50_fpn_1x_dota_le90-c0097bc4.pth'
+
+# ReDet
+# config_path = '../mmrotate/configs/redet/redet_re50_refpn_1x_dota_ms_rr_le90.py'
+# checkpoint_path = 'redet/redet_re50_fpn_1x_dota_ms_rr_le90/redet_re50_fpn_1x_dota_ms_rr_le90-fc9217b5.pth'
+
+# KFIoU
+# config_path = '../mmrotate/configs/rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc.py'
+# checkpoint_path = 'rotated_retinanet/rotated_retinanet_hbb_r50_fpn_1x_dota_oc/rotated_retinanet_hbb_r50_fpn_1x_dota_oc-e8a7c7df.pth'
 
 @ROTATED_DATASETS.register_module()
 class TinyDataset(DOTADataset):

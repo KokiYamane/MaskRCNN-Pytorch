@@ -8,7 +8,7 @@ import torchvision.transforms as T
 import sys
 sys.path.append('.')
 sys.path.append('..')
-from PennFudanDataset import PennFudanDataset
+from InstanceSegmentationDataset import PennFudanDataset
 
 
 class TestImageDataset(unittest.TestCase):
