@@ -85,6 +85,15 @@ def main(args):
     config.log_config.interval = 10
     config.log_config.hooks = [
         dict(type='TextLoggerHook'),
+        dict(
+            type='MMDetWandbHook',
+            init_kwargs={'project': 'mmrotate'},
+            interval=10,
+            log_checkpoint=True,
+            log_checkpoint_metadata=True,
+            num_eval_images=100,
+            bbox_score_thr=0.3,
+        )
     ]
 
     # make dataset
