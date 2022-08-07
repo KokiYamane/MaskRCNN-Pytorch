@@ -60,14 +60,18 @@ def main(args):
         args.checkpoint,
         device='cuda',
     )
-    # print(model)
+    print(model)
     print('Classes:', model.CLASSES)
 
     # Inference
+    # import mmcv
+    # image = mmcv.imread(args.image)
+    # print(image)
     start = time.time()
     result = inference_detector(model, args.image)
     end = time.time()
     print(f'Inference time: {end - start:.6f} [s]')
+    print(result)
     print(result[0])
 
     # 結果の表示

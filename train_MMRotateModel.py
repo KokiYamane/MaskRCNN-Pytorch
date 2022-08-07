@@ -13,8 +13,8 @@ checkpoint_path = './MMRotateModels/rotated_retinanet/rotated_retinanet_obb_r50_
 
 @ROTATED_DATASETS.register_module()
 class TinyDataset(DOTADataset):
-    CLASSES = ('ship',)
-    # CLASSES = ('object',)
+    # CLASSES = ('ship',)
+    CLASSES = ('tea_pack',)
 
 
 def main(args):
@@ -26,23 +26,35 @@ def main(args):
     config.dataset_type = dateset_type
     config.data_root = args.data
 
-    # test
-    config.data.test.type = dateset_type
-    config.data.test.data_root = data_path
-    config.data.test.ann_file = 'val'
-    config.data.test.img_prefix = 'images'
+    train_pipeline = [
+        dict(type='LoadImageFromFile'),
+        dict(type='LoadAnnotations', with_bbox=True),
+        # dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
+        dict(type='RRandomFlip', flip_ratio=0.5),
+        # dict(type='Normalize', **img_norm_cfg),
+        dict(type='Pad', size_divisor=32),
+        dict(type='DefaultFormatBundle'),
+        dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
+    ]
 
     # train
-    config.data.train.type = dateset_type
+    # config.data.train.type = dateset_type
     config.data.train.data_root = data_path
     config.data.train.ann_file = 'train'
     config.data.train.img_prefix = 'images'
+    config.data.train.pipeline = train_pipeline
+
+    # test
+    # config.data.test.type = dateset_type
+    # config.data.test.data_root = data_path
+    # config.data.test.ann_file = 'val'
+    # config.data.test.img_prefix = 'images'
 
     # val
-    config.data.val.type = dateset_type
-    config.data.val.data_root = data_path
-    config.data.val.ann_file = 'val'
-    config.data.val.img_prefix = 'images'
+    # config.data.val.type = dateset_type
+    # config.data.val.data_root = data_path
+    # config.data.val.ann_file = 'val'
+    # config.data.val.img_prefix = 'images'
 
     # class num
     # config.model.roi_head.bbox_head[0].num_classes = 1
