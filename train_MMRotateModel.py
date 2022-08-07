@@ -14,17 +14,18 @@ checkpoint_path = './MMRotateModels/rotated_retinanet/rotated_retinanet_obb_r50_
 @ROTATED_DATASETS.register_module()
 class TinyDataset(DOTADataset):
     # CLASSES = ('ship',)
-    CLASSES = ('tea_pack',)
+    CLASSES = ('class',)
 
 
 def main(args):
     config = mmcv.Config.fromfile(config_path)
 
-    data_path = './data/ssdd_tiny/'
+    # data_path = './data/ssdd_tiny/'
+    data_path = args.data
     dateset_type = 'TinyDataset'
 
     config.dataset_type = dateset_type
-    config.data_root = args.data
+    config.data_root = data_path
 
     train_pipeline = [
         dict(type='LoadImageFromFile'),
@@ -38,7 +39,7 @@ def main(args):
     ]
 
     # train
-    # config.data.train.type = dateset_type
+    config.data.train.type = dateset_type
     config.data.train.data_root = data_path
     config.data.train.ann_file = 'train'
     config.data.train.img_prefix = 'images'
@@ -51,10 +52,10 @@ def main(args):
     # config.data.test.img_prefix = 'images'
 
     # val
-    # config.data.val.type = dateset_type
-    # config.data.val.data_root = data_path
-    # config.data.val.ann_file = 'val'
-    # config.data.val.img_prefix = 'images'
+    config.data.val.type = dateset_type
+    config.data.val.data_root = data_path
+    config.data.val.ann_file = 'val'
+    config.data.val.img_prefix = 'images'
 
     # class num
     # config.model.roi_head.bbox_head[0].num_classes = 1
