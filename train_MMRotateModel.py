@@ -62,7 +62,8 @@ def main(args):
     # config.model.roi_head.bbox_head[1].num_classes = 1
 
     # model path
-    # config.load_from = checkpoint_path
+    if args.pretrained:
+        config.load_from = checkpoint_path
 
     # output path
     config.work_dir = args.output
@@ -143,6 +144,7 @@ def argparse():
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--gpu', default='0',
                         type=lambda x: list(map(int, x.split(','))))
+    parser.add_argument('--pretrained', action='store_true')
     args = parser.parse_args()
     return args
 
