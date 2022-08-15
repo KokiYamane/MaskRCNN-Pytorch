@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -6,9 +7,9 @@ sns.set()
 
 
 def main(args):
-    print(args.data)
+    print(args.path)
 
-    df = pd.read_json(args.data, lines=True)
+    df = pd.read_json(os.path.join(args.path, 'None.log.json'), lines=True)
     print(df)
 
     plt.figure(figsize=(12, 8))
@@ -22,16 +23,13 @@ def main(args):
     plt.legend()
     plt.xlabel('epoch')
     plt.ylabel('loss')
-    plt.savefig(args.output)
+    plt.savefig(os.path.join(args.path, 'loss.png'))
 
 
 def argparse():
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument('--data', type=str,
-                        default='./results/MMRotate_test/None.log.json')
-    parser.add_argument('--output', type=str,
-                        default='./results/MMRotate_test/loss.png')
+    parser.add_argument('--path', type=str, default='./results/MMRotate_test/')
     args = parser.parse_args()
     return args
 
