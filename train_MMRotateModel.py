@@ -23,38 +23,26 @@ class TinyDataset(DOTADataset):
 
 @PIPELINES.register_module()
 class MyTransform:
-    """Add your transform
-
-    Args:
-        p (float): Probability of shifts. Default 0.5.
-    """
-
-    def __init__(self, p=0.5):
-        self.p = p
-
+    def __init__(self):
         self.transforms = T.Compose([
             T.ToTensor(),
             T.ColorJitter(
                 brightness=0.5,
                 contrast=0.5,
                 saturation=0.5,
-                # hue=0.5,
             ),
-            # T.ToPILImage(),
         ])
 
     def __call__(self, results):
-        # if random.random() > self.p:
-        #     results['dummy'] = True
-        # return results
-        # print(results)
         results['img'] = self.transforms(results['img'])
+
+        # add noise
+        results['img'] += torch.randn(results['img'].size()) * 0.1
 
         # to int
         results['img'] = 255 * results['img']
         results['img'] = results['img'].permute(1, 2, 0)
         results['img'] = results['img'].detach().numpy().astype(dtype='uint8')
-        # results['img'] = T.ToPILImage()(results['img'])
 
         return results
 
@@ -76,7 +64,7 @@ def main(args):
         dict(type='RRandomFlip', flip_ratio=0.5),
         # dict(type='Normalize', **img_norm_cfg),
         dict(type='Pad', size_divisor=32),
-        dict(type='MyTransform', p=0.2),
+        dict(type='MyTransform'),
         dict(type='DefaultFormatBundle'),
         dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
     ]
