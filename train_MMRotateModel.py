@@ -3,9 +3,13 @@ import time
 
 from mmrotate.datasets.builder import ROTATED_DATASETS
 from mmrotate.datasets.dota import DOTADataset
+from mmdet.datasets import PIPELINES
 import mmcv
 import mmdet
 import mmdet.apis
+
+import torch
+import torchvision.transforms as T
 
 config_path = '../mmrotate/configs/rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90.py'
 checkpoint_path = './MMRotateModels/rotated_retinanet/rotated_retinanet_obb_r50_fpn_1x_dota_le90/rotated_retinanet_obb_r50_fpn_1x_dota_le90-c0097bc4.pth'
@@ -15,6 +19,44 @@ checkpoint_path = './MMRotateModels/rotated_retinanet/rotated_retinanet_obb_r50_
 class TinyDataset(DOTADataset):
     # CLASSES = ('ship',)
     CLASSES = ('class',)
+
+
+@PIPELINES.register_module()
+class MyTransform:
+    """Add your transform
+
+    Args:
+        p (float): Probability of shifts. Default 0.5.
+    """
+
+    def __init__(self, p=0.5):
+        self.p = p
+
+        self.transforms = T.Compose([
+            T.ToTensor(),
+            T.ColorJitter(
+                brightness=0.5,
+                contrast=0.5,
+                saturation=0.5,
+                # hue=0.5,
+            ),
+            # T.ToPILImage(),
+        ])
+
+    def __call__(self, results):
+        # if random.random() > self.p:
+        #     results['dummy'] = True
+        # return results
+        # print(results)
+        results['img'] = self.transforms(results['img'])
+
+        # to int
+        results['img'] = 255 * results['img']
+        results['img'] = results['img'].permute(1, 2, 0)
+        results['img'] = results['img'].detach().numpy().astype(dtype='uint8')
+        # results['img'] = T.ToPILImage()(results['img'])
+
+        return results
 
 
 def main(args):
@@ -34,6 +76,7 @@ def main(args):
         dict(type='RRandomFlip', flip_ratio=0.5),
         # dict(type='Normalize', **img_norm_cfg),
         dict(type='Pad', size_divisor=32),
+        dict(type='MyTransform', p=0.2),
         dict(type='DefaultFormatBundle'),
         dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
     ]
@@ -87,15 +130,15 @@ def main(args):
     config.log_config.interval = 10
     config.log_config.hooks = [
         dict(type='TextLoggerHook'),
-        dict(
-            type='MMDetWandbHook',
-            init_kwargs={'project': 'mmrotate'},
-            interval=10,
-            log_checkpoint=True,
-            log_checkpoint_metadata=True,
-            num_eval_images=100,
-            bbox_score_thr=0.3,
-        )
+        # dict(
+        #     type='MMDetWandbHook',
+        #     init_kwargs={'project': 'mmrotate'},
+        #     interval=10,
+        #     log_checkpoint=True,
+        #     log_checkpoint_metadata=True,
+        #     num_eval_images=100,
+        #     bbox_score_thr=0.3,
+        # )
     ]
 
     # make dataset
