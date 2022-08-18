@@ -10,6 +10,7 @@ def main(args):
     print(args.path)
 
     df = pd.read_json(os.path.join(args.path, 'None.log.json'), lines=True)
+    df = df.iloc[1:]
     print(df)
 
     plt.figure(figsize=(12, 8))
