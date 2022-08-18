@@ -11,6 +11,8 @@ from train_MaskRCNN import get_model_instance_segmentation
 
 
 def main(args):
+    os.makedirs(os.path.join(args.data, 'segmentations'))
+
     model = get_model_instance_segmentation(num_classes=2)
     model = model.cuda()
     model.load_state_dict(torch.load(args.model))
@@ -36,6 +38,7 @@ def main(args):
             mask = result[0]['masks'][i][:, y1:y2, x1:x2]
             image_part = torch.mul(image_part, mask)
             image_part = T.ToPILImage()(image_part)
+            image_path = os.path.splitext(image_path)[0]
             image_part.save(os.path.join(args.data, 'segmentations',
                             '%s_%d.png' % (os.path.basename(image_path), i)))
 
