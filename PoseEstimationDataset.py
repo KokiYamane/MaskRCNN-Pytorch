@@ -14,32 +14,38 @@ class PoseEstimationDataset(torch.utils.data.Dataset):
             T.Resize((128, 128)),
         ])
         self.label_paths = glob.glob(os.path.join(root, 'pose', '*'))
-        self.labels = []
 
-        for label_path in self.label_paths:
-            label = self._load_label(label_path)
-            label = torch.tensor(label, dtype=torch.float32)
-            self.labels.append(label)
+        # self.labels = []
+        # for label_path in self.label_paths:
+        #     label = self._load_label(label_path)
+        #     label = torch.tensor(label, dtype=torch.float32)
+        #     self.labels.append(label)
 
     def __getitem__(self, idx):
+        label_path = self.label_paths[idx]
         label_filename = os.path.splitext(
-            os.path.basename(self.label_paths[idx]))[0]
+            os.path.basename(label_path))[0]
         image_path = os.path.join(
             self.root, 'segmentations', f'{label_filename}.png')
         image = Image.open(image_path)
         image = self.transforms(image)
         # print(image.shape)
-        return image, self.labels[idx]
+
+        label = self._load_label(label_path)
+        label = torch.tensor(label, dtype=torch.float32)
+
+        return image, label
 
     def __len__(self):
-        return len(self.labels)
+        return len(self.label_paths)
 
     def _load_label(self, label_path):
         label = np.loadtxt(label_path, dtype='object')
-        x1, y1 = label[:2].astype(np.int)
-        x2, y2 = label[6:8].astype(np.int)
+        # x1, y1 = label[:2].astype(np.int)
+        # x2, y2 = label[6:8].astype(np.int)
+        x1, y1, x2, y2 = label[:4].astype(np.int)
         # print(x1, y1, x2, y2)
-        label = np.arctan2(x1 - x2, y1 - y2)
+        label = np.arctan2(y2 - y1, x2 - x1)
         return label
 
 
