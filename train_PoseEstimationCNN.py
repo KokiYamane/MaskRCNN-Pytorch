@@ -128,6 +128,9 @@ class PoseEstimationCNNTrainer(Tranier):
         images = torch.stack(images).to(self.device)
         targets = torch.stack(targets).to(self.device)
 
+        if not valid:
+            images += torch.randn_like(images) * 0.1
+
         pred = self.model(images)
         loss = self.loss_fn(pred, targets)
 
