@@ -76,7 +76,8 @@ class PoseEstimationCNNTrainer(Tranier):
         print('valid data num:', len(valid_dataset))
 
         model = PoseEstimationCNN()
-        self.loss_fn = torch.nn.MSELoss()
+        # self.loss_fn = torch.nn.MSELoss()
+        self.loss_fn = torch.nn.SmoothL1Loss()
 
         params = [p for p in model.parameters() if p.requires_grad]
         optimizer = torch.optim.SGD(
@@ -128,8 +129,8 @@ class PoseEstimationCNNTrainer(Tranier):
         images = torch.stack(images).to(self.device)
         targets = torch.stack(targets).to(self.device)
 
-        if not valid:
-            images += torch.randn_like(images) * 0.1
+        # if not valid:
+        #     images += torch.randn_like(images) * 0.1
 
         pred = self.model(images)
         loss = self.loss_fn(pred, targets)
@@ -168,8 +169,9 @@ class PoseEstimationCNNTrainer(Tranier):
         fig.clf()
         # row, col = 5, 10
         # row, col = 1, 5
-        col = 5
-        row = math.ceil(len(images) / 5)
+        # col = 5
+        col = 10
+        row = math.ceil(len(images) / col)
         for i in range(len(images)):
             ax = fig.add_subplot(row, col, i + 1)
             image = images[i].transpose(1, 2, 0)

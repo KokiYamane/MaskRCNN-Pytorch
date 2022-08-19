@@ -30,9 +30,17 @@ class PoseEstimationDataset(torch.utils.data.Dataset):
         image = Image.open(image_path)
         image = self.transforms(image)
         # print(image.shape)
+        random_angle = torch.rand(1) * 2 * np.pi
+        # print(random_angle.item())
+        image = T.functional.rotate(image, random_angle.item() * 180 / np.pi)
 
         label = self._load_label(label_path)
         label = torch.tensor(label, dtype=torch.float32)
+        # label = label.unsqueeze(0)
+        # print(label.shape)
+        # print(random_angle.shape)
+        # label -= random_angle
+        label -= random_angle.squeeze()
 
         return image, label
 
