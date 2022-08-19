@@ -11,7 +11,7 @@ class PoseEstimationDataset(torch.utils.data.Dataset):
         self.root = root
         self.transforms = T.Compose([
             T.ToTensor(),
-            T.Resize((64, 64)),
+            T.Resize((128, 128)),
         ])
         self.label_paths = glob.glob(os.path.join(root, 'pose', '*'))
         self.labels = []

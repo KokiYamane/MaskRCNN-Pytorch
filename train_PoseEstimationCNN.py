@@ -1,17 +1,11 @@
 import os
 from typing import Tuple
-# import numpy as np
-# import cv2
 import wandb
-# import math
+import math
+import numpy as np
+import cv2
 
 import torch
-# import torch.nn as nn
-
-# import torchvision
-# import torchvision.transforms as T
-# from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-# from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -40,27 +34,19 @@ class PoseEstimationCNNTrainer(Tranier):
 
         # plot results
         self.valid_images = []
+        self.valid_targets = []
         self.valid_outputs = []
-        self.fig_segment_masks = plt.figure(figsize=(20, 10))
-
-        # def get_transform(train):
-        #     transforms = []
-        #     transforms.append(T.ToTensor())
-        #     # if train:
-        #     #     transforms.append(T.RandomHorizontalFlip(0.5))
-        #     return T.Compose(transforms)
+        self.fig_pose_estimation = plt.figure(figsize=(20, 10))
 
         train_dataset = PoseEstimationDataset(
             data_path,
-            # get_transform(train=True),
         )
         valid_dataset = PoseEstimationDataset(
             data_path,
-            # get_transform(train=False),
         )
         torch.manual_seed(1)
         indices = torch.randperm(len(train_dataset)).tolist()
-        N = int(len(valid_dataset) * 0.1)
+        N = int(len(valid_dataset) * 0.2)
         train_dataset = torch.utils.data.Subset(train_dataset, indices[:-N])
         valid_dataset = torch.utils.data.Subset(valid_dataset, indices[-N:])
 
@@ -71,7 +57,7 @@ class PoseEstimationCNNTrainer(Tranier):
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            # num_workers=num_workers,
+            num_workers=num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
             # drop_last=True,
@@ -80,7 +66,7 @@ class PoseEstimationCNNTrainer(Tranier):
             valid_dataset,
             batch_size=batch_size,
             shuffle=False,
-            # num_workers=num_workers,
+            num_workers=num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
             # drop_last=True,
@@ -89,7 +75,6 @@ class PoseEstimationCNNTrainer(Tranier):
         print('train data num:', len(train_dataset))
         print('valid data num:', len(valid_dataset))
 
-        # model = self.get_model_instance_segmentation(num_classes=2)
         model = PoseEstimationCNN()
         self.loss_fn = torch.nn.MSELoss()
 
@@ -133,29 +118,6 @@ class PoseEstimationCNNTrainer(Tranier):
             config.valid_data_num = len(valid_dataset)
             wandb.watch(model)
 
-    # def get_model_instance_segmentation(self, num_classes):
-    #     # load an instance segmentation model pre-trained on COCO
-    #     model = torchvision.models.detection.maskrcnn_resnet50_fpn(
-    #         pretrained=True)
-
-    #     # get number of input features for the classifier
-    #     in_features = model.roi_heads.box_predictor.cls_score.in_features
-    #     # replace the pre-trained head with a new one
-    #     model.roi_heads.box_predictor = FastRCNNPredictor(
-    #         in_features, num_classes)
-
-    #     # now get the number of input features for the mask classifier
-    #     in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
-    #     hidden_layer = 256
-    #     # and replace the mask predictor with a new one
-    #     model.roi_heads.mask_predictor = MaskRCNNPredictor(
-    #         in_features_mask,
-    #         hidden_layer,
-    #         num_classes,
-    #     )
-
-    #     return model
-
     def calc_loss(
         self,
         batch: Tuple[torch.Tensor, torch.Tensor],
@@ -163,92 +125,96 @@ class PoseEstimationCNNTrainer(Tranier):
     ) -> torch.Tensor:
         images, targets = batch
 
-        # images = [image.to(self.device) for image in images]
-        # targets = [target.to(self.device) for target in targets]
-        # targets = [
-        #     {k: v.to(self.device) for k, v in target.items()}
-        #     for target in targets
-        # ]
-        # print(images)
         images = torch.stack(images).to(self.device)
-        # print(images.shape)
         targets = torch.stack(targets).to(self.device)
-        # print(targets)
 
         pred = self.model(images)
         loss = self.loss_fn(pred, targets)
+
+        # if valid:
+        self.valid_images.extend(images.cpu().detach().numpy())
+        self.valid_targets.extend(targets.cpu().detach().numpy())
+        self.valid_outputs.extend(pred.cpu().detach().numpy())
+
         return loss
 
     def plot_results(self, epoch: int):
         if epoch % 100 == 0 or (epoch % 1 == 0 and epoch <= 100):
-            self.plot_segmentation_masks(
-                self.fig_segment_masks,
+            self.plot_pose_estimation(
+                self.fig_pose_estimation,
                 self.valid_images,
+                self.valid_targets,
                 self.valid_outputs,
                 epoch=epoch,
             )
-            self.fig_segment_masks.savefig(
-                os.path.join(self.out_dir, 'segment_masks.png'),
+            self.fig_pose_estimation.savefig(
+                os.path.join(self.out_dir, 'pose_estimation.png'),
             )
 
             if self.wandb_flag:
                 wandb.log({
                     'epoch': epoch,
-                    # 'segment_masks': wandb.Image(self.fig_segment_masks),
+                    'pose_estimation': wandb.Image(self.fig_pose_estimation),
                 })
 
         self.valid_images = []
+        self.valid_targets = []
         self.valid_outputs = []
 
-    # def plot_segmentation_masks(self, fig, images, outputs, epoch=0):
-    #     fig.clf()
-    #     # row, col = 5, 10
-    #     # row, col = 1, 5
-    #     col = 5
-    #     row = math.ceil(len(images) / 5)
-    #     for i, (image, output) in enumerate(zip(images, outputs)):
-    #         ax = fig.add_subplot(row, col, i + 1)
-    #         image = image.transpose(1, 2, 0)
-    #         image = (255 * image).astype(np.uint8)
-    #         image = cv2.UMat(image)
-    #         masks = output['masks']
-    #         scores = output['scores']
-    #         for mask, score in zip(masks, scores):
-    #             if score < 0.75:
-    #                 continue
+    def plot_pose_estimation(self, fig, images, targets, outputs, epoch=0):
+        fig.clf()
+        # row, col = 5, 10
+        # row, col = 1, 5
+        col = 5
+        row = math.ceil(len(images) / 5)
+        for i in range(len(images)):
+            ax = fig.add_subplot(row, col, i + 1)
+            image = images[i].transpose(1, 2, 0)
+            image = (255 * image).astype(np.uint8)
+            image = cv2.UMat(image)
+            image = image.get()
+            ax.imshow(image)
+            ax.axis('off')
 
-    #             mask = mask.transpose(1, 2, 0)
-    #             mask = (255 * mask).astype(np.uint8)
-    #             mask = cv2.GaussianBlur(mask, (5, 5), 0)
-    #             ret, mask = cv2.threshold(
-    #                 mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    #             contours, hierarchy = cv2.findContours(
-    #                 mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            H, W, _ = image.shape
 
-    #             if len(contours) == 0:
-    #                 continue
+            target_angle = targets[i]
+            target_dx = H / 4 * np.cos(target_angle)
+            target_dy = H / 4 * np.sin(target_angle)
+            ax.arrow(
+                x=W / 2,
+                y=H / 2,
+                dx=target_dx,
+                dy=target_dy,
+                width=0.1,
+                head_width=0.05,
+                head_length=0.2,
+                length_includes_head=True,
+                color='red',
+            )
 
-    #             contour = max(contours, key=lambda x: cv2.contourArea(x))
-    #             cv2.drawContours(
-    #                 image,
-    #                 [contour],
-    #                 -1,
-    #                 # color=(0, 255, 0),
-    #                 # thickness=10,
-    #                 color=(0, int(255 * score), 0),
-    #                 thickness=int(10 * score),
-    #             )
-    #         image = image.get()
-    #         ax.imshow(image)
-    #         ax.axis('off')
+            output_angle = outputs[i]
+            output_dx = H / 4 * np.cos(output_angle)
+            output_dy = H / 4 * np.sin(output_angle)
+            ax.arrow(
+                x=W / 2,
+                y=H / 2,
+                dx=output_dx,
+                dy=output_dy,
+                width=0.1,
+                head_width=0.05,
+                head_length=0.2,
+                length_includes_head=True,
+                color='blue',
+            )
 
-    #     fig.suptitle('{} epoch'.format(epoch))
-    #     fig.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95)
+        fig.suptitle('{} epoch'.format(epoch))
+        fig.subplots_adjust(left=0.05, right=0.95, bottom=0.05, top=0.95)
 
     def train(self, n_epochs: int):
         return super().train(
             n_epochs,
-            # callback=self.plot_results,
+            callback=self.plot_results,
         )
 
 
