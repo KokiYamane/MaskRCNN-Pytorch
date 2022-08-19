@@ -11,12 +11,14 @@ class PoseEstimationDataset(torch.utils.data.Dataset):
         self.root = root
         self.transforms = T.Compose([
             T.ToTensor(),
+            T.Resize((64, 64)),
         ])
         self.label_paths = glob.glob(os.path.join(root, 'pose', '*'))
         self.labels = []
 
         for label_path in self.label_paths:
             label = self._load_label(label_path)
+            label = torch.tensor(label, dtype=torch.float32)
             self.labels.append(label)
 
     def __getitem__(self, idx):
@@ -26,6 +28,7 @@ class PoseEstimationDataset(torch.utils.data.Dataset):
             self.root, 'segmentations', f'{label_filename}.png')
         image = Image.open(image_path)
         image = self.transforms(image)
+        # print(image.shape)
         return image, self.labels[idx]
 
     def __len__(self):
