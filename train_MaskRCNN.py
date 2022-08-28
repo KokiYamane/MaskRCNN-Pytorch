@@ -19,7 +19,7 @@ sns.set()
 
 import sys
 sys.path.append('.')
-from PennFudanDataset import PennFudanDataset
+from SegmentationDataset import SegmentationDataset
 from Trainer import Tranier
 
 
@@ -49,11 +49,11 @@ class MaskRCNNTrainer(Tranier):
             #     transforms.append(T.RandomHorizontalFlip(0.5))
             return T.Compose(transforms)
 
-        train_dataset = PennFudanDataset(
+        train_dataset = SegmentationDataset(
             data_path,
             get_transform(train=True),
         )
-        valid_dataset = PennFudanDataset(
+        valid_dataset = SegmentationDataset(
             data_path,
             get_transform(train=False),
         )
@@ -165,6 +165,7 @@ class MaskRCNNTrainer(Tranier):
             {k: v.to(self.device) for k, v in target.items()}
             for target in targets
         ]
+        # print(torch.sum(targets[0]['masks']))
 
         if not valid:
             losses = self.model(images, targets)
@@ -217,9 +218,12 @@ class MaskRCNNTrainer(Tranier):
             image = cv2.UMat(image)
             masks = output['masks']
             scores = output['scores']
+            # print(masks)
+            # print(np.sum(masks))
+            # print(output['labels'])
             for mask, score in zip(masks, scores):
-                if score < 0.75:
-                    continue
+                # if score < 0.75:
+                #     continue
 
                 mask = mask.transpose(1, 2, 0)
                 mask = (255 * mask).astype(np.uint8)
@@ -277,11 +281,8 @@ def argparse():
     parser.add_argument('--early_stopping', type=int, default=1e10)
     parser.add_argument('--wandb', action='store_true')
     parser.add_argument('--num_workers', type=int, default=1)
-
-    def tp(x):
-        return list(map(int, x.split(',')))
-
-    parser.add_argument('--gpu', type=tp, default='0')
+    parser.add_argument('--gpu', default='0',
+                        type=lambda x: list(map(int, x.split(','))))
     args = parser.parse_args()
     return args
 

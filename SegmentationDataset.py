@@ -2,25 +2,39 @@ import os
 import numpy as np
 import torch
 from PIL import Image
+import glob
 
 
-class PennFudanDataset(torch.utils.data.Dataset):
+class SegmentationDataset(torch.utils.data.Dataset):
     def __init__(self, root, transforms):
         self.root = root
         self.transforms = transforms
         # load all image files, sorting them to
         # ensure that they are aligned
-        self.imgs = list(sorted(
-            os.listdir(os.path.join(root, "originals"))))
-        self.masks = list(sorted(
-            os.listdir(os.path.join(root, "instance_segmentations"))))
+        # self.imgs = list(sorted(
+        #     os.listdir(os.path.join(root, "originals"))))
+        # self.masks = list(sorted(
+        #     os.listdir(os.path.join(root, "instance_segmentations"))))
+
+        self.class_list = glob.glob(os.path.join(root, '*'))
+        self.image_paths = []
+        self.mask_paths = []
+        self.label_list = []
+        for i, class_path in enumerate(self.class_list):
+            self.image_paths.extend(
+                glob.glob(os.path.join(class_path, 'originals', '*')))
+            self.mask_paths.extend(
+                glob.glob(os.path.join(class_path, 'instance_segmentations', '*')))
+            self.label_list.extend([i] * len(self.image_paths))
 
     def __getitem__(self, idx):
         # load images and masks
-        img_path = os.path.join(
-            self.root, "originals", self.imgs[idx])
-        mask_path = os.path.join(
-            self.root, "instance_segmentations", self.masks[idx])
+        # img_path = os.path.join(
+        #     self.root, "originals", self.imgs[idx])
+        # mask_path = os.path.join(
+        #     self.root, "instance_segmentations", self.masks[idx])
+        img_path = self.image_paths[idx]
+        mask_path = self.mask_paths[idx]
         img = Image.open(img_path).convert("RGB")
         # note that we haven't converted the mask to RGB,
         # because each color corresponds to a different instance
@@ -51,11 +65,13 @@ class PennFudanDataset(torch.utils.data.Dataset):
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
         # there is only one class
-        labels = torch.ones((num_objs,), dtype=torch.int64)
+        # labels = torch.ones((num_objs,), dtype=torch.int64)
+        labels = torch.as_tensor(self.label_list[idx], dtype=torch.int64)
+        labels = labels.repeat(num_objs)
 
         if self.transforms is not None:
             img = self.transforms(img)
-            masks = self.transforms(masks)
+            # masks = self.transforms(masks)
 
         masks = torch.as_tensor(masks, dtype=torch.uint8)
 
@@ -75,4 +91,4 @@ class PennFudanDataset(torch.utils.data.Dataset):
         return img, target
 
     def __len__(self):
-        return len(self.imgs)
+        return len(self.image_paths)
