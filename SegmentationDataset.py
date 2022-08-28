@@ -32,7 +32,7 @@ class SegmentationDataset(torch.utils.data.Dataset):
             data_num = len(mask_paths)
             print(f'class {i+1} : {class_name} ({data_num})')
 
-        print(self.label_list)
+        # print(self.label_list)
         self.num_classes = i + 2
         print('num_classes:', self.num_classes)
 
