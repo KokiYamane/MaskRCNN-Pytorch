@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 import cv2
 import wandb
-import math
+# import math
 
 import torch
 # import torch.nn as nn
@@ -40,28 +40,28 @@ class MaskRCNNTrainer(Tranier):
         # plot results
         self.valid_images = []
         self.valid_outputs = []
-        self.fig_segment_masks = plt.figure(figsize=(20, 10))
+        self.fig_segment_masks = plt.figure(figsize=(20, 20))
 
-        def get_transform(train):
+        def get_transform():
             transforms = []
             transforms.append(T.ToTensor())
             # if train:
             #     transforms.append(T.RandomHorizontalFlip(0.5))
             return T.Compose(transforms)
 
-        train_dataset = SegmentationDataset(
+        dataset = SegmentationDataset(
             data_path,
-            get_transform(train=True),
+            get_transform(),
         )
-        valid_dataset = SegmentationDataset(
-            data_path,
-            get_transform(train=False),
-        )
+        # valid_dataset = SegmentationDataset(
+        #     data_path,
+        #     get_transform(train=False),
+        # )
         torch.manual_seed(1)
-        indices = torch.randperm(len(train_dataset)).tolist()
-        N = int(len(valid_dataset) * 0.1)
-        train_dataset = torch.utils.data.Subset(train_dataset, indices[:-N])
-        valid_dataset = torch.utils.data.Subset(valid_dataset, indices[-N:])
+        indices = torch.randperm(len(dataset)).tolist()
+        N = int(len(dataset) * 0.1)
+        train_dataset = torch.utils.data.Subset(dataset, indices[:-N])
+        valid_dataset = torch.utils.data.Subset(dataset, indices[-N:])
 
         def collate_fn(batch):
             return tuple(zip(*batch))
@@ -88,7 +88,8 @@ class MaskRCNNTrainer(Tranier):
         print('train data num:', len(train_dataset))
         print('valid data num:', len(valid_dataset))
 
-        model = self.get_model_instance_segmentation(num_classes=2)
+        num_classes = dataset.num_classes
+        model = self.get_model_instance_segmentation(num_classes=num_classes)
 
         params = [p for p in model.parameters() if p.requires_grad]
         optimizer = torch.optim.SGD(
@@ -209,21 +210,29 @@ class MaskRCNNTrainer(Tranier):
         fig.clf()
         # row, col = 5, 10
         # row, col = 1, 5
-        col = 5
-        row = math.ceil(len(images) / 5)
-        for i, (image, output) in enumerate(zip(images, outputs)):
+        # col = 5
+        # row = math.floor(len(images) / 5)
+        # for i, (image, output) in enumerate(zip(images, outputs)):
+        col = np.floor(np.sqrt(len(images))).astype(np.int)
+        row = col
+        for i in range(col * row):
             ax = fig.add_subplot(row, col, i + 1)
+
+            image = images[i]
             image = image.transpose(1, 2, 0)
             image = (255 * image).astype(np.uint8)
             image = cv2.UMat(image)
+
+            output = outputs[i]
             masks = output['masks']
             scores = output['scores']
+            label = output['labels']
             # print(masks)
             # print(np.sum(masks))
-            # print(output['labels'])
-            for mask, score in zip(masks, scores):
-                # if score < 0.75:
-                #     continue
+            print(output['labels'])
+            for mask, score, label in zip(masks, scores, label):
+                if score < 0.2:
+                    continue
 
                 mask = mask.transpose(1, 2, 0)
                 mask = (255 * mask).astype(np.uint8)
@@ -236,6 +245,14 @@ class MaskRCNNTrainer(Tranier):
                 if len(contours) == 0:
                     continue
 
+                color_map = [
+                    (0, 0, 0),
+                    (255, 0, 0),
+                    (0, 255, 0),
+                    (0, 0, 255),
+                    (0, 255, 255),
+                ]
+
                 contour = max(contours, key=lambda x: cv2.contourArea(x))
                 cv2.drawContours(
                     image,
@@ -243,7 +260,8 @@ class MaskRCNNTrainer(Tranier):
                     -1,
                     # color=(0, 255, 0),
                     # thickness=10,
-                    color=(0, int(255 * score), 0),
+                    # color=(0, int(255 * score), 0),
+                    color=color_map[label],
                     thickness=int(10 * score),
                 )
             image = image.get()

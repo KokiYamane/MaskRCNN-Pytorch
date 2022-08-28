@@ -21,11 +21,20 @@ class SegmentationDataset(torch.utils.data.Dataset):
         self.mask_paths = []
         self.label_list = []
         for i, class_path in enumerate(self.class_list):
-            self.image_paths.extend(
-                glob.glob(os.path.join(class_path, 'originals', '*')))
-            self.mask_paths.extend(
-                glob.glob(os.path.join(class_path, 'instance_segmentations', '*')))
-            self.label_list.extend([i] * len(self.image_paths))
+            image_paths = glob.glob(os.path.join(class_path, 'originals', '*'))
+            self.image_paths.extend(image_paths)
+            mask_paths = glob.glob(os.path.join(
+                class_path, 'instance_segmentations', '*'))
+            self.mask_paths.extend(mask_paths)
+            self.label_list.extend([i + 1] * len(mask_paths))
+
+            class_name = os.path.basename(class_path)
+            data_num = len(mask_paths)
+            print(f'class {i+1} : {class_name} ({data_num})')
+
+        print(self.label_list)
+        self.num_classes = i + 2
+        print('num_classes:', self.num_classes)
 
     def __getitem__(self, idx):
         # load images and masks
