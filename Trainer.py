@@ -172,8 +172,8 @@ class Tranier():
                     f'model_param_{epoch:06d}.pt')
                 torch.save(self.model.state_dict(), path_encoder_param)
 
-                if self.wandb_flag:
-                    wandb.save(path_encoder_param)
+                # if self.wandb_flag:
+                #     wandb.save(path_encoder_param)
 
             # save checkpoint
             path_checkpoint = os.path.join(self.out_dir, 'checkpoint.pt')
