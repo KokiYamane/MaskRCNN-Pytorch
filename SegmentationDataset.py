@@ -12,9 +12,9 @@ class SegmentationDataset(torch.utils.data.Dataset):
         # load all image files, sorting them to
         # ensure that they are aligned
         # self.imgs = list(sorted(
-        #     os.listdir(os.path.join(root, "originals"))))
+        #     os.listdir(os.path.join(root, 'originals'))))
         # self.masks = list(sorted(
-        #     os.listdir(os.path.join(root, "instance_segmentations"))))
+        #     os.listdir(os.path.join(root, 'instance_segmentations'))))
 
         self.class_list = glob.glob(os.path.join(root, '*'))
         self.image_paths = []
@@ -30,12 +30,12 @@ class SegmentationDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         # load images and masks
         # img_path = os.path.join(
-        #     self.root, "originals", self.imgs[idx])
+        #     self.root, 'originals', self.imgs[idx])
         # mask_path = os.path.join(
-        #     self.root, "instance_segmentations", self.masks[idx])
+        #     self.root, 'instance_segmentations', self.masks[idx])
         img_path = self.image_paths[idx]
         mask_path = self.mask_paths[idx]
-        img = Image.open(img_path).convert("RGB")
+        img = Image.open(img_path).convert('RGB')
         # note that we haven't converted the mask to RGB,
         # because each color corresponds to a different instance
         # with 0 being background
@@ -81,12 +81,12 @@ class SegmentationDataset(torch.utils.data.Dataset):
         iscrowd = torch.zeros((num_objs,), dtype=torch.int64)
 
         target = {}
-        target["boxes"] = boxes
-        target["labels"] = labels
-        target["masks"] = masks
-        target["image_id"] = image_id
-        target["area"] = area
-        target["iscrowd"] = iscrowd
+        target['boxes'] = boxes
+        target['labels'] = labels
+        target['masks'] = masks
+        target['image_id'] = image_id
+        target['area'] = area
+        target['iscrowd'] = iscrowd
 
         return img, target
 
