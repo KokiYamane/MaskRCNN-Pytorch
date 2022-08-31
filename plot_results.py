@@ -108,7 +108,7 @@ def plot_segmentation_masks(fig, images, outputs, num_class=5, epoch=0):
                 # thickness=10,
                 # color=(0, int(255 * score), 0),
                 color=color_map[label],
-                thickness=int(10 * score),
+                thickness=int(15 * score),
             )
         image = image.get()
         ax.imshow(image)
