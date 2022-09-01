@@ -14,7 +14,7 @@ sys.path.append('.')
 from SegmentationDataset import SegmentationDataset
 from Trainer import Tranier
 from plot_results import plot_segmentation_masks
-from data_augmentation import AddGaussianNoise
+from data_augmentation import AddGaussianNoise, GridMask
 from MaskRCNNModel import get_model_instance_segmentation
 
 
@@ -45,8 +45,8 @@ class MaskRCNNTrainer(Tranier):
                 contrast=0.5,
                 saturation=0.5,
             ),
-            T.RandomErasing(),
-            # GridMask(),
+            # T.RandomErasing(),
+            GridMask(),
         ])
 
         dataset = SegmentationDataset(
