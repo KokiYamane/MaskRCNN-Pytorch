@@ -77,7 +77,7 @@ def plot_segmentation_masks(fig, images, outputs, num_class=5, epoch=0):
         # print(np.sum(masks))
         # print(output['labels'])
         for mask, score, label in zip(masks, scores, label):
-            if score < 0.75:
+            if score < 0.1:
                 continue
 
             mask = mask.transpose(1, 2, 0)

@@ -22,6 +22,7 @@ sys.path.append('.')
 from SegmentationDataset import SegmentationDataset
 from Trainer import Tranier
 from plot_results import plot_segmentation_masks
+from data_augmentation import AddGaussianNoise
 
 
 class MaskRCNNTrainer(Tranier):
@@ -43,16 +44,21 @@ class MaskRCNNTrainer(Tranier):
         self.valid_outputs = []
         self.fig_segment_masks = plt.figure(figsize=(20, 20))
 
-        def get_transform():
-            transforms = []
-            transforms.append(T.ToTensor())
-            # if train:
-            #     transforms.append(T.RandomHorizontalFlip(0.5))
-            return T.Compose(transforms)
+        transforms = T.Compose([
+            T.ToTensor(),
+            AddGaussianNoise(std=0.1),
+            T.ColorJitter(
+                brightness=0.5,
+                contrast=0.5,
+                saturation=0.5,
+            ),
+            T.RandomErasing(),
+            # GridMask(),
+        ])
 
         dataset = SegmentationDataset(
             data_path,
-            get_transform(),
+            transforms=transforms,
         )
         # valid_dataset = SegmentationDataset(
         #     data_path,
@@ -71,7 +77,7 @@ class MaskRCNNTrainer(Tranier):
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            # num_workers=num_workers,
+            num_workers=num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
             # drop_last=True,
@@ -80,7 +86,7 @@ class MaskRCNNTrainer(Tranier):
             valid_dataset,
             batch_size=batch_size,
             shuffle=False,
-            # num_workers=num_workers,
+            num_workers=num_workers,
             pin_memory=True,
             collate_fn=collate_fn,
             # drop_last=True,
