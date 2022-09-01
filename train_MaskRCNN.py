@@ -46,7 +46,8 @@ class MaskRCNNTrainer(Tranier):
                 saturation=0.5,
             ),
             # T.RandomErasing(),
-            GridMask(),
+            GridMask(fill=0),
+            GridMask(fill=1),
         ])
 
         dataset = SegmentationDataset(

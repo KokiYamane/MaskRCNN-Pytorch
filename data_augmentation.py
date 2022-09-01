@@ -12,10 +12,11 @@ class AddGaussianNoise():
 
 
 class GridMask():
-    def __init__(self, p=0.5, d_range=(96, 224), r=0.6):
+    def __init__(self, p=0.5, d_range=(96, 224), r=0.6, fill=0):
         self.p = p
         self.d_range = d_range
         self.r = r
+        self.fill = fill
 
     def __call__(self, sample: torch.Tensor) -> torch.Tensor:
         """
@@ -35,4 +36,8 @@ class GridMask():
         delta_x, delta_y = np.random.randint(0, d, size=2)
         mask = mask[delta_x: delta_x + H, delta_y: delta_y + W]
         sample *= np.expand_dims(mask, 0)
+
+        # fill
+        sample += self.fill * (1 - mask)
+
         return torch.from_numpy(sample)
