@@ -1,17 +1,9 @@
 import os
 from typing import Tuple
-# import numpy as np
-# import cv2
 import wandb
-# import math
 
 import torch
-# import torch.nn as nn
-
-import torchvision
 import torchvision.transforms as T
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -23,6 +15,7 @@ from SegmentationDataset import SegmentationDataset
 from Trainer import Tranier
 from plot_results import plot_segmentation_masks
 from data_augmentation import AddGaussianNoise
+from MaskRCNNModel import get_model_instance_segmentation
 
 
 class MaskRCNNTrainer(Tranier):
@@ -96,7 +89,7 @@ class MaskRCNNTrainer(Tranier):
         print('valid data num:', len(valid_dataset))
 
         num_classes = dataset.num_classes
-        model = self.get_model_instance_segmentation(num_classes=num_classes)
+        model = get_model_instance_segmentation(num_classes=num_classes)
 
         params = [p for p in model.parameters() if p.requires_grad]
         optimizer = torch.optim.SGD(
@@ -137,29 +130,6 @@ class MaskRCNNTrainer(Tranier):
             config.train_data_num = len(train_dataset)
             config.valid_data_num = len(valid_dataset)
             wandb.watch(model)
-
-    def get_model_instance_segmentation(self, num_classes):
-        # load an instance segmentation model pre-trained on COCO
-        model = torchvision.models.detection.maskrcnn_resnet50_fpn(
-            pretrained=True)
-
-        # get number of input features for the classifier
-        in_features = model.roi_heads.box_predictor.cls_score.in_features
-        # replace the pre-trained head with a new one
-        model.roi_heads.box_predictor = FastRCNNPredictor(
-            in_features, num_classes)
-
-        # now get the number of input features for the mask classifier
-        in_features_mask = model.roi_heads.mask_predictor.conv5_mask.in_channels
-        hidden_layer = 256
-        # and replace the mask predictor with a new one
-        model.roi_heads.mask_predictor = MaskRCNNPredictor(
-            in_features_mask,
-            hidden_layer,
-            num_classes,
-        )
-
-        return model
 
     def calc_loss(
         self,
