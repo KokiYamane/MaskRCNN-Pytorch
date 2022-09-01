@@ -99,11 +99,11 @@ class MaskRCNNTrainer(Tranier):
             weight_decay=0.0005,
         )
 
-        lr_scheduler = torch.optim.lr_scheduler.StepLR(
-            optimizer,
-            step_size=3,
-            gamma=0.1,
-        )
+        # lr_scheduler = torch.optim.lr_scheduler.StepLR(
+        #     optimizer,
+        #     step_size=3,
+        #     gamma=0.1,
+        # )
 
         super().__init__(
             train_loader=train_loader,
@@ -111,7 +111,7 @@ class MaskRCNNTrainer(Tranier):
             model=model,
             calc_loss=self.calc_loss,
             optimizer=optimizer,
-            lr_scheduler=lr_scheduler,
+            # lr_scheduler=lr_scheduler,
             out_dir=out_dir,
             wandb_flag=wandb_flag,
             gpu=gpu,

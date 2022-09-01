@@ -160,7 +160,7 @@ class Tranier():
             log += f'  valid loss: {valid_loss:.6f}'
             log += f'  elapsed time: {elapsed_time:.3f}'
             log += f'  early stopping: {self.early_stopping_counter}'
-            if hasattr(self, 'lr_scheduler'):
+            if self.lr_scheduler is not None:
                 log += f'  lr: {self.lr_scheduler.get_last_lr()[-1]}'
             print(log)
 
@@ -198,7 +198,7 @@ class Tranier():
                     'train_loss': train_loss,
                     'valid_loss': valid_loss,
                 })
-                if hasattr(self, 'lr_scheduler'):
+                if self.lr_scheduler is not None:
                     wandb.log({
                         'epoch': epoch,
                         'learning_rate': self.lr_scheduler.get_last_lr()[-1],
