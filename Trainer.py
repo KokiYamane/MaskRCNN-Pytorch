@@ -160,6 +160,8 @@ class Tranier():
             log += f'  valid loss: {valid_loss:.6f}'
             log += f'  elapsed time: {elapsed_time:.3f}'
             log += f'  early stopping: {self.early_stopping_counter}'
+            if hasattr(self, 'lr_scheduler'):
+                log += f'  lr: {self.lr_scheduler.get_last_lr()[-1]}'
             print(log)
 
             # save model
@@ -184,6 +186,10 @@ class Tranier():
                 'loss': loss,
             }, path_checkpoint)
 
+            path_model_param_latest = os.path.join(
+                self.out_dir, 'model_param_latest.pt')
+            torch.save(self.model.state_dict(), path_model_param_latest)
+
             # wandb
             if self.wandb_flag:
                 wandb.log({
@@ -192,18 +198,24 @@ class Tranier():
                     'train_loss': train_loss,
                     'valid_loss': valid_loss,
                 })
+                if hasattr(self, 'lr_scheduler'):
+                    wandb.log({
+                        'epoch': epoch,
+                        'learning_rate': self.lr_scheduler.get_last_lr()[-1],
+                    })
                 wandb.save(path_checkpoint)
+                wandb.save(path_model_param_latest)
 
-            if valid_loss <= self.best_test:
-                self.best_test = valid_loss
-                self.early_stopping_counter = 0
+            # if valid_loss <= self.best_test:
+            #     self.best_test = valid_loss
+            #     self.early_stopping_counter = 0
 
-                # save model
-                path_model_param_best = os.path.join(
-                    self.out_dir, 'model_param_best.pt')
-                torch.save(self.model.state_dict(), path_model_param_best)
-                if self.wandb_flag:
-                    wandb.save(path_model_param_best)
+            #     # save model
+            #     path_model_param_best = os.path.join(
+            #         self.out_dir, 'model_param_best.pt')
+            #     torch.save(self.model.state_dict(), path_model_param_best)
+            #     if self.wandb_flag:
+            #         wandb.save(path_model_param_best)
 
             else:
                 # Early Stopping
