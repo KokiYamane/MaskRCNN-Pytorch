@@ -89,8 +89,8 @@ class MaskRCNNTrainer(Tranier):
         print('train data num:', len(train_dataset))
         print('valid data num:', len(valid_dataset))
 
-        num_classes = dataset.num_classes
-        model = get_model_instance_segmentation(num_classes=num_classes)
+        self.num_classes = dataset.num_classes
+        model = get_model_instance_segmentation(num_classes=self.num_classes)
 
         params = [p for p in model.parameters() if p.requires_grad]
         optimizer = torch.optim.SGD(
@@ -170,6 +170,7 @@ class MaskRCNNTrainer(Tranier):
                 self.valid_images,
                 self.valid_outputs,
                 epoch=epoch,
+                num_class=self.num_classes,
             )
             self.fig_segment_masks.savefig(
                 os.path.join(self.out_dir, 'segment_masks.png'),
