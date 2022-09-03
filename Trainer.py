@@ -1,3 +1,4 @@
+from cmath import nan
 import torch
 import wandb
 import time
@@ -206,21 +207,24 @@ class Tranier():
                 wandb.save(path_checkpoint)
                 wandb.save(path_model_param_latest)
 
+            if train_loss <= self.best_test:
+                self.best_test = train_loss
             # if valid_loss <= self.best_test:
             #     self.best_test = valid_loss
-            #     self.early_stopping_counter = 0
+                self.early_stopping_counter = 0
 
-            #     # save model
-            #     path_model_param_best = os.path.join(
-            #         self.out_dir, 'model_param_best.pt')
-            #     torch.save(self.model.state_dict(), path_model_param_best)
-            #     if self.wandb_flag:
-            #         wandb.save(path_model_param_best)
+                # save model
+                path_model_param_best = os.path.join(
+                    self.out_dir, 'model_param_best.pt')
+                torch.save(self.model.state_dict(), path_model_param_best)
+                if self.wandb_flag:
+                    wandb.save(path_model_param_best)
 
             else:
                 # Early Stopping
                 self.early_stopping_counter += 1
-                if self.early_stopping_counter >= self.early_stopping_count:
+                if self.early_stopping_counter >= self.early_stopping_count or \
+                        valid_loss is nan:
                     print('Early Stopping!')
                     break
 
