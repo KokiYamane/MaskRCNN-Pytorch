@@ -6,5 +6,9 @@ seaborn
 pandas
 tqdm
 scikit-learn
-opencv-python
 wandb
+
+opencv-python
+opencv-python-headless
+opencv-contrib-python
+opencv-contrib-python-headless
