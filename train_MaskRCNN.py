@@ -23,10 +23,10 @@ from PennFudanDataset import PennFudanDataset
 from Trainer import Tranier
 
 
-def get_model_instance_segmentation(num_classes=1):
+def get_model_instance_segmentation(num_classes=1, weight=None):
     # load an instance segmentation model pre-trained on COCO
     model = torchvision.models.detection.maskrcnn_resnet50_fpn(
-        pretrained=True)
+        weight=weight)
 
     # get number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
